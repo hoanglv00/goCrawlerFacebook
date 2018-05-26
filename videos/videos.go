@@ -29,14 +29,14 @@ func init() {
 	TOKEN = os.Getenv("FBTOKEN")
 }
 
-func findAllVideos(videosRet data.FBVideos, baseDir string, ownerName string, id string) {
+func FindAllVideos(videosRet data.FBVideos, baseDir string, ownerName string, id string) {
 	dir := fmt.Sprintf("%v/%v", baseDir, ownerName)
 	os.MkdirAll(dir, 0755)
 	linkChan := make(chan data.VideoData)
 	wg := new(sync.WaitGroup)
 	for i := 0; i < 1; i++ {
 		wg.Add(1)
-		go downloadVideoFromLink(dir, linkChan, wg)
+		go DownloadVideoFromLink(dir, linkChan, wg)
 	}
 	for _, v := range videosRet.Data {
 		dlChan := data.VideoData{}
@@ -131,7 +131,7 @@ func FileSize(filePath string) (int64, bool) {
 	return file.Size(), true
 }
 
-func downloadVideoFromLink(baseDir string, linkChan chan data.VideoData, wg *sync.WaitGroup) {
+func DownloadVideoFromLink(baseDir string, linkChan chan data.VideoData, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	for target := range linkChan {
@@ -187,7 +187,7 @@ func downloadVideoFromLink(baseDir string, linkChan chan data.VideoData, wg *syn
 	}
 }
 
-func runFBGraphAPIVideos(query string) (queryResult interface{}) {
+func RunFBGraphAPIVideos(query string) (queryResult interface{}) {
 	res, err := fb.Get(query, fb.Params{
 		"access_token": TOKEN,
 		"fields":       "permalink_url,updated_time,description,id",

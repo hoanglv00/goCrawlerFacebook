@@ -22,7 +22,7 @@ func init() {
 	TOKEN = os.Getenv("FBTOKEN")
 }
 
-func parseMapToStruct(inData interface{}, decodeStruct interface{}) {
+func ParseMapToStruct(inData interface{}, decodeStruct interface{}) {
 	jret, _ := json.Marshal(inData)
 	err := json.Unmarshal(jret, &decodeStruct)
 	if err != nil {
@@ -30,7 +30,7 @@ func parseMapToStruct(inData interface{}, decodeStruct interface{}) {
 	}
 }
 
-func downloadWorker(destDir string, linkChan chan data.DLData, wg *sync.WaitGroup) {
+func DownloadWorker(destDir string, linkChan chan data.DLData, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	for target := range linkChan {
@@ -71,7 +71,7 @@ func downloadWorker(destDir string, linkChan chan data.DLData, wg *sync.WaitGrou
 		}
 	}
 }
-func findPhotoByAlbum(ownerName string, albumName string, albumId string, baseDir string, photoCount int, photoOffset int) {
+func FindPhotoByAlbum(ownerName string, albumName string, albumId string, baseDir string, photoCount int, photoOffset int) {
 	photoRet := data.FBPhotos{}
 	var queryString string
 	if photoOffset > 0 {
@@ -81,15 +81,15 @@ func findPhotoByAlbum(ownerName string, albumName string, albumId string, baseDi
 		queryString = fmt.Sprintf("/%s/photos?limit=%d", albumId, photoCount)
 	}
 
-	resPhoto := runFBGraphAPIPhotos(queryString)
-	parseMapToStruct(resPhoto, &photoRet)
+	resPhoto := RunFBGraphAPIPhotos(queryString)
+	ParseMapToStruct(resPhoto, &photoRet)
 	dir := fmt.Sprintf("%v/%v/%v - %v", baseDir, ownerName, albumId, albumName)
 	os.MkdirAll(dir, 0755)
 	linkChan := make(chan data.DLData)
 	wg := new(sync.WaitGroup)
 	for i := 0; i < 1; i++ {
 		wg.Add(1)
-		go downloadWorker(dir, linkChan, wg)
+		go DownloadWorker(dir, linkChan, wg)
 	}
 	for _, v := range photoRet.Data {
 		dlChan := data.DLData{}
@@ -100,7 +100,7 @@ func findPhotoByAlbum(ownerName string, albumName string, albumId string, baseDi
 	}
 }
 
-func runFBGraphAPIAlbums(query string) (queryResult interface{}) {
+func RunFBGraphAPIAlbums(query string) (queryResult interface{}) {
 	res, err := fb.Get(query, fb.Params{
 		"access_token": TOKEN,
 		"fields":       "from,count,name",
@@ -111,7 +111,7 @@ func runFBGraphAPIAlbums(query string) (queryResult interface{}) {
 	}
 	return res
 }
-func runFBGraphAPIPhotos(query string) (queryResult interface{}) {
+func RunFBGraphAPIPhotos(query string) (queryResult interface{}) {
 	res, err := fb.Get(query, fb.Params{
 		"access_token": TOKEN,
 		"fields":       "link,images",
