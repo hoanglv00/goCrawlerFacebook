@@ -149,7 +149,7 @@ func DownloadVideoFromLink(baseDir string, linkChan chan data.VideoData, wg *syn
 		downloadLink = u
 
 		var filePath = fmt.Sprintf("%v/videos/%v.mp4", baseDir, target.VideoID)
-		tempFilePath := filePath //+ ".download"
+		tempFilePath := filePath + ".download"
 		tempFileSize, _ := FileSize(tempFilePath)
 		headers := map[string]string{
 			"Referer": downloadLink,
@@ -163,14 +163,14 @@ func DownloadVideoFromLink(baseDir string, linkChan chan data.VideoData, wg *syn
 			file, _ = os.Create(tempFilePath)
 		}
 
-		// defer func() {
-		// 	file.Close()
-		// 	// must close the file before rename or it will cause `The process cannot access the file because it is being used by another process.` error.
-		// 	err := os.Rename(tempFilePath, filePath)
-		// 	if err != nil {
-		// 		log.Fatal(err)
-		// 	}
-		// }()
+		defer func() {
+			file.Close()
+			// must close the file before rename or it will cause `The process cannot access the file because it is being used by another process.` error.
+			err := os.Rename(tempFilePath, filePath)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}()
 
 		res := Request("GET", downloadLink, nil, headers)
 		if res.StatusCode >= 400 {

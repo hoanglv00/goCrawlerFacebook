@@ -74,25 +74,25 @@ func main() {
 
 	//use limit to avoid error: Please reduce the amount of data you're asking for, then retry your request
 	//Curently 30 is a magic number of FB Graph API call, 50 will still occur failed.  >_<
-	maxCount := 30
+	// maxCount := 30
 
-	userFolderName := fmt.Sprintf("[%s]%s", userRet.Username, userRet.Name)
-	for _, v := range albumRet.Data {
-		fmt.Println("Starting download ["+v.Name+"]-"+v.From.Name, " total count:", v.Count)
+	// userFolderName := fmt.Sprintf("[%s]%s", userRet.Username, userRet.Name)
+	// for _, v := range albumRet.Data {
+	// 	fmt.Println("Starting download ["+v.Name+"]-"+v.From.Name, " total count:", v.Count)
 
-		if v.Count > maxCount {
-			currentOffset := 0
-			for {
-				if currentOffset > v.Count {
-					break
-				}
-				photos.FindPhotoByAlbum(userFolderName, v.Name, v.ID, baseDir, maxCount, currentOffset)
-				currentOffset = currentOffset + maxCount
-			}
-		} else {
-			photos.FindPhotoByAlbum(userFolderName, v.Name, v.ID, baseDir, v.Count, 0)
-		}
+	// 	if v.Count > maxCount {
+	// 		currentOffset := 0
+	// 		for {
+	// 			if currentOffset > v.Count {
+	// 				break
+	// 			}
+	// 			photos.FindPhotoByAlbum(userFolderName, v.Name, v.ID, baseDir, maxCount, currentOffset)
+	// 			currentOffset = currentOffset + maxCount
+	// 		}
+	// 	} else {
+	// 		photos.FindPhotoByAlbum(userFolderName, v.Name, v.ID, baseDir, v.Count, 0)
+	// 	}
 
-	}
+	// }
 	videos.FindAllVideos(videosRet, baseDir, userRet.Name, userRet.ID)
 }
