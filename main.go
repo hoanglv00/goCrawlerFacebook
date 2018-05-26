@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/user"
+	//"os/user"
 	"sync"
 
 	data "github.com/hoanglv00/goCrawlerFacebook/data"
@@ -54,8 +54,8 @@ func main() {
 	inputPage = *pageName
 
 	//Get system user folder
-	usr, _ := user.Current()
-	baseDir := fmt.Sprintf("%v/Pictures/goFBPages", usr.HomeDir)
+	//usr, _ := user.Current()
+	//baseDir := fmt.Sprintf("%v/Pictures/goFBPages", usr.HomeDir)
 
 	//Get User info
 	resUser := runFBGraphAPI("/" + inputPage)
@@ -63,7 +63,7 @@ func main() {
 	photos.ParseMapToStruct(resUser, &userRet)
 
 	//Get all videos
-	resVideos := videos.RunFBGraphAPIVideos("/" + inputPage + "/videos")
+	resVideos := videos.RunFBGraphAPIVideos("/" + inputPage + "/videos.limit(100)")
 	videosRet := data.FBVideos{}
 	photos.ParseMapToStruct(resVideos, &videosRet)
 
@@ -93,6 +93,9 @@ func main() {
 	// 		photos.FindPhotoByAlbum(userFolderName, v.Name, v.ID, baseDir, v.Count, 0)
 	// 	}
 
+	// }
+	// for _, v := range videosRet.Data {
+	// 	fmt.Println(v.ID)
 	// }
 	videos.FindAllVideos(videosRet, baseDir, userRet.Name, userRet.ID)
 }
