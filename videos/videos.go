@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"data"
+	data "github.com/hoanglv00/goCrawlerFacebook/data"
 	fb "github.com/huandu/facebook"
 )
 

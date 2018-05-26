@@ -9,8 +9,8 @@ import (
 	"sync"
 
 	data "github.com/hoanglv00/goCrawlerFacebook/data"
-	photos "github.com/hoanglv00/goCrawlerFacebook/data"
-	videos "github.com/hoanglv00/goCrawlerFacebook/data"
+	photos "github.com/hoanglv00/goCrawlerFacebook/photos"
+	videos "github.com/hoanglv00/goCrawlerFacebook/videos"
 	fb "github.com/huandu/facebook"
 )
 
