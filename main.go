@@ -60,17 +60,17 @@ func main() {
 	//Get User info
 	resUser := runFBGraphAPI("/" + inputPage)
 	userRet := data.FBUser{}
-	photos.parseMapToStruct(resUser, &userRet)
+	photos.ParseMapToStruct(resUser, &userRet)
 
 	//Get all videos
-	resVideos := videos.runFBGraphAPIVideos("/" + inputPage + "/videos")
+	resVideos := videos.RunFBGraphAPIVideos("/" + inputPage + "/videos")
 	videosRet := data.FBVideos{}
-	photos.parseMapToStruct(resVideos, &videosRet)
+	photos.ParseMapToStruct(resVideos, &videosRet)
 
 	//Get all albums
-	resAlbums := photos.runFBGraphAPIAlbums("/" + inputPage + "/albums")
+	resAlbums := photos.RunFBGraphAPIAlbums("/" + inputPage + "/albums")
 	albumRet := data.FBAlbums{}
-	photos.parseMapToStruct(resAlbums, &albumRet)
+	photos.ParseMapToStruct(resAlbums, &albumRet)
 
 	//use limit to avoid error: Please reduce the amount of data you're asking for, then retry your request
 	//Curently 30 is a magic number of FB Graph API call, 50 will still occur failed.  >_<
@@ -86,13 +86,13 @@ func main() {
 				if currentOffset > v.Count {
 					break
 				}
-				photos.findPhotoByAlbum(userFolderName, v.Name, v.ID, baseDir, maxCount, currentOffset)
+				photos.FindPhotoByAlbum(userFolderName, v.Name, v.ID, baseDir, maxCount, currentOffset)
 				currentOffset = currentOffset + maxCount
 			}
 		} else {
-			photos.findPhotoByAlbum(userFolderName, v.Name, v.ID, baseDir, v.Count, 0)
+			photos.FindPhotoByAlbum(userFolderName, v.Name, v.ID, baseDir, v.Count, 0)
 		}
 
 	}
-	findAllVideos(videosRet, baseDir, userRet.Name, userRet.ID)
+	videos.FindAllVideos(videosRet, baseDir, userRet.Name, userRet.ID)
 }
