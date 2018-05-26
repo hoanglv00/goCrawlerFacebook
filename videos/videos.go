@@ -140,16 +140,16 @@ func DownloadVideoFromLink(baseDir string, linkChan chan data.VideoData, wg *syn
 		//title := MatchOneOf(html, `<title id="pageTitle">(.+)</title>`)[1]
 
 		//var tag string
-		var u_sd, u_hd string
+		//var u_sd, u_hd string
 		// for _, quality := range []string{"sd"} {
 		// 	//tag := quality
 		// 	u = MatchOneOf(
 		// 		html, fmt.Sprintf(`%s_src_no_ratelimit:"(.+?)"`, quality))[1]
 		// }
-		u_sd = MatchOneOf(
-			html, fmt.Sprintf(`%s_src_no_ratelimit:"(.+?)"`, sd))[1]
-		u_hd = MatchOneOf(
-			html, fmt.Sprintf(`%s_src_no_ratelimit:"(.+?)"`, hd))[1]
+		u_sd := MatchOneOf(
+			html, fmt.Sprintf(`%s_src_no_ratelimit:"(.+?)"`, "sd"))[1]
+		u_hd := MatchOneOf(
+			html, fmt.Sprintf(`%s_src_no_ratelimit:"(.+?)"`, "hd"))[1]
 		if u_hd != nil {
 			downloadLink = u_hd
 		}
