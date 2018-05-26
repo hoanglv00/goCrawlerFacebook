@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	//"os/user"
+	"os/user"
 	"sync"
 
 	data "github.com/hoanglv00/goCrawlerFacebook/data"
@@ -54,8 +54,8 @@ func main() {
 	inputPage = *pageName
 
 	//Get system user folder
-	//usr, _ := user.Current()
-	//baseDir := fmt.Sprintf("%v/Pictures/goFBPages", usr.HomeDir)
+	usr, _ := user.Current()
+	baseDir := fmt.Sprintf("%v/Pictures/goFBPages", usr.HomeDir)
 
 	//Get User info
 	resUser := runFBGraphAPI("/" + inputPage)

@@ -140,14 +140,22 @@ func DownloadVideoFromLink(baseDir string, linkChan chan data.VideoData, wg *syn
 		//title := MatchOneOf(html, `<title id="pageTitle">(.+)</title>`)[1]
 
 		//var tag string
-		var u string
-		for _, quality := range []string{"sd"} {
-			//tag := quality
-			u = MatchOneOf(
-				html, fmt.Sprintf(`%s_src_no_ratelimit:"(.+?)"`, quality))[1]
+		var u_sd, u_hd string
+		// for _, quality := range []string{"sd"} {
+		// 	//tag := quality
+		// 	u = MatchOneOf(
+		// 		html, fmt.Sprintf(`%s_src_no_ratelimit:"(.+?)"`, quality))[1]
+		// }
+		u_sd = MatchOneOf(
+			html, fmt.Sprintf(`%s_src_no_ratelimit:"(.+?)"`, sd))[1]
+		u_hd = MatchOneOf(
+			html, fmt.Sprintf(`%s_src_no_ratelimit:"(.+?)"`, hd))[1]
+		if u_hd != nil {
+			downloadLink = u_hd
 		}
-		downloadLink = u
-
+		if u_hd == nil {
+			downloadLink = u_sd
+		}
 		var filePath = fmt.Sprintf("%v/%v.mp4", baseDir, target.VideoID)
 		tempFilePath := filePath //+ ".download"
 		tempFileSize, _ := FileSize(tempFilePath)
@@ -163,14 +171,14 @@ func DownloadVideoFromLink(baseDir string, linkChan chan data.VideoData, wg *syn
 			file, _ = os.Create(tempFilePath)
 		}
 
-		defer func() {
-			file.Close()
-			// must close the file before rename or it will cause `The process cannot access the file because it is being used by another process.` error.
-			err := os.Rename(tempFilePath, filePath)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}()
+		// defer func() {
+		// 	file.Close()
+		// 	// must close the file before rename or it will cause `The process cannot access the file because it is being used by another process.` error.
+		// 	err := os.Rename(tempFilePath, filePath)
+		// 	if err != nil {
+		// 		log.Fatal(err)
+		// 	}
+		// }()
 
 		res := Request("GET", downloadLink, nil, headers)
 		if res.StatusCode >= 400 {
