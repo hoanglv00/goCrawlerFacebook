@@ -148,7 +148,7 @@ func DownloadVideoFromLink(baseDir string, linkChan chan data.VideoData, wg *syn
 		}
 		downloadLink = u
 
-		var filePath = fmt.Sprintf("%v/videos/%v.mp4", baseDir, target.VideoID)
+		var filePath = fmt.Sprintf("%v/%v.mp4", baseDir, target.VideoID)
 		tempFilePath := filePath + ".download"
 		tempFileSize, _ := FileSize(tempFilePath)
 		headers := map[string]string{
