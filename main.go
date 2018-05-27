@@ -63,7 +63,7 @@ func main() {
 	photos.ParseMapToStruct(resUser, &userRet)
 
 	//Get all videos
-	resVideos := videos.RunFBGraphAPIVideos("/" + inputPage + "/videos.limit(100)")
+	resVideos := videos.RunFBGraphAPIVideos("/" + inputPage + "/videos?limit=100")
 	videosRet := data.FBVideos{}
 	photos.ParseMapToStruct(resVideos, &videosRet)
 

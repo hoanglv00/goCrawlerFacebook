@@ -149,11 +149,10 @@ func DownloadVideoFromLink(baseDir string, linkChan chan data.VideoData, wg *syn
 		u_sd := MatchOneOf(
 			html, fmt.Sprintf(`%s_src_no_ratelimit:"(.+?)"`, "sd"))[1]
 		u_hd := MatchOneOf(
-			html, fmt.Sprintf(`%s_src_no_ratelimit:"(.+?)"`, "hd"))[1]
-		if u_hd != "" {
-			downloadLink = u_hd
-		}
-		if u_hd == "" {
+			html, fmt.Sprintf(`%s_src_no_ratelimit:"(.+?)"`, "hd"))
+		if len(u_hd) >= 1 {
+			downloadLink = u_hd[1]
+		} else {
 			downloadLink = u_sd
 		}
 		var filePath = fmt.Sprintf("%v/%v.mp4", baseDir, target.VideoID)
