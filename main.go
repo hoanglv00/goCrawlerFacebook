@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/user"
+	//"os/user"
 	"sync"
 
 	data "github.com/hoanglv00/goCrawlerFacebook/data"
@@ -52,8 +52,10 @@ func main() {
 	data.ThreadNumber = *numOfWorkersPtr
 
 	//Get system user folder
-	usr, _ := user.Current()
-	baseDir := fmt.Sprintf("%v/Pictures/goFBPages", usr.HomeDir)
+	// usr, _ := user.Current()
+	// baseDir := fmt.Sprintf("%v/Pictures/goFBPages", usr.HomeDir)
+
+	baseDir := "D:/goFBPages"
 
 	//Get User info
 	resUser := runFBGraphAPI("/" + inputPage)

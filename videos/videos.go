@@ -103,7 +103,7 @@ func Request(
 	req.Header.Set("Referer", url)
 	for k, v := range headers {
 		req.Header.Set(k, v)
-		fmt.Println(req)
+		//fmt.Println(req)
 	}
 	retryTimes := 3
 	var (
@@ -150,7 +150,7 @@ func DownloadVideoFromLink(baseDir string, linkChan chan data.VideoData, wg *syn
 			downloadLink = u_sd
 		}
 		var filePath = fmt.Sprintf("%v/%v.mp4", baseDir, target.VideoID)
-		tempFilePath := filePath //+ ".download"
+		tempFilePath := filePath + ".download"
 		tempFileSize, _ := FileSize(tempFilePath)
 		headers := map[string]string{
 			"Referer": downloadLink,
@@ -172,16 +172,24 @@ func DownloadVideoFromLink(baseDir string, linkChan chan data.VideoData, wg *syn
 				log.Fatal(fmt.Sprintf("HTTP error: %d", res.StatusCode))
 			}
 			fmt.Println(res.Body)
+			defer func() {
+				file.Close()
+				// must close the file before rename or it will cause `The process cannot access the file because it is being used by another process.` error.
+				err := os.Rename(tempFilePath, filePath)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}()
 
 			defer res.Body.Close()
-			defer file.Close()
+			//defer file.Close()
 			_, err := io.Copy(file, res.Body)
 			if err != nil {
 				log.Println("download video err=", err)
 			}
 		}()
-
 	}
+	wgp.Wait()
 }
 
 func RunFBGraphAPIVideos(query string) (queryResult interface{}) {
