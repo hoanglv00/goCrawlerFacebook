@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/user"
@@ -15,16 +17,10 @@ import (
 )
 
 var pageName = flag.String("n", "", "Facebook page name such as: scottiepippen")
-var numOfWorkersPtr = flag.Int("c", 2, "the number of concurrent rename workers. default = 2")
+var crawler = flag.String("s", "", "Crawler videos or pictures")
+var numOfWorkersPtr = flag.Int("c", 2, "The number of concurrent rename workers. default = 2")
 var m sync.Mutex
 var TOKEN string
-var FakeHeaders = map[string]string{
-	"Accept":          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-	"Accept-Charset":  "UTF-8,*;q=0.5",
-	"Accept-Encoding": "gzip,deflate,sdch",
-	"Accept-Language": "en-US,en;q=0.8",
-	"User-Agent":      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.146 Safari/537.36",
-}
 
 func init() {
 	TOKEN = os.Getenv("FBTOKEN")
@@ -53,6 +49,8 @@ func main() {
 	}
 	inputPage = *pageName
 
+	data.ThreadNumber = *numOfWorkersPtr
+
 	//Get system user folder
 	usr, _ := user.Current()
 	baseDir := fmt.Sprintf("%v/Pictures/goFBPages", usr.HomeDir)
@@ -61,41 +59,55 @@ func main() {
 	resUser := runFBGraphAPI("/" + inputPage)
 	userRet := data.FBUser{}
 	photos.ParseMapToStruct(resUser, &userRet)
+	userFolderName := fmt.Sprintf("[%s]%s", userRet.Username, userRet.Name)
 
-	//Get all videos
-	resVideos := videos.RunFBGraphAPIVideos("/" + inputPage + "/videos?limit=100")
-	videosRet := data.FBVideos{}
-	photos.ParseMapToStruct(resVideos, &videosRet)
+	if *crawler == "" {
+		dir := fmt.Sprintf("%v/%v", baseDir, userFolderName)
+		resUserJson, err := json.Marshal(userRet)
+		if err != nil {
+			log.Fatalln("marshal error, err=", err)
+		}
+		os.MkdirAll(dir, 0755)
+		err = ioutil.WriteFile(dir+"/PageInfor.json", resUserJson, 0644) // Ghi dữ liệu vào file JSON
+		if err != nil {
+			log.Fatalln("write file error, err=", err)
+		}
+	} else if *crawler == "videos" {
+		//Get all videos
+		resVideos := videos.RunFBGraphAPIVideos("/" + inputPage + "/videos?limit=100")
+		videosRet := data.FBVideos{}
+		photos.ParseMapToStruct(resVideos, &videosRet)
 
-	//Get all albums
-	resAlbums := photos.RunFBGraphAPIAlbums("/" + inputPage + "/albums")
-	albumRet := data.FBAlbums{}
-	photos.ParseMapToStruct(resAlbums, &albumRet)
+		videos.FindAllVideos(videosRet, baseDir, userRet.Name, userRet.ID)
 
-	//use limit to avoid error: Please reduce the amount of data you're asking for, then retry your request
-	//Curently 30 is a magic number of FB Graph API call, 50 will still occur failed.  >_<
-	// maxCount := 30
+	} else if *crawler == "photos" {
+		//Get all albums
+		resAlbums := photos.RunFBGraphAPIAlbums("/" + inputPage + "/albums")
+		albumRet := data.FBAlbums{}
+		photos.ParseMapToStruct(resAlbums, &albumRet)
 
-	// userFolderName := fmt.Sprintf("[%s]%s", userRet.Username, userRet.Name)
-	// for _, v := range albumRet.Data {
-	// 	fmt.Println("Starting download ["+v.Name+"]-"+v.From.Name, " total count:", v.Count)
+		//use limit to avoid error: Please reduce the amount of data you're asking for, then retry your request
+		//Curently 30 is a magic number of FB Graph API call, 50 will still occur failed.  >_<
+		maxCount := 30
 
-	// 	if v.Count > maxCount {
-	// 		currentOffset := 0
-	// 		for {
-	// 			if currentOffset > v.Count {
-	// 				break
-	// 			}
-	// 			photos.FindPhotoByAlbum(userFolderName, v.Name, v.ID, baseDir, maxCount, currentOffset)
-	// 			currentOffset = currentOffset + maxCount
-	// 		}
-	// 	} else {
-	// 		photos.FindPhotoByAlbum(userFolderName, v.Name, v.ID, baseDir, v.Count, 0)
-	// 	}
+		for _, v := range albumRet.Data {
+			fmt.Println("Starting download ["+v.Name+"]-"+v.From.Name, " total count:", v.Count)
 
-	// }
-	// for _, v := range videosRet.Data {
-	// 	fmt.Println(v.ID)
-	// }
-	videos.FindAllVideos(videosRet, baseDir, userRet.Name, userRet.ID)
+			if v.Count > maxCount {
+				currentOffset := 0
+				for {
+					if currentOffset > v.Count {
+						break
+					}
+					photos.FindPhotoByAlbum(userFolderName, v.Name, v.ID, baseDir, maxCount, currentOffset)
+					currentOffset = currentOffset + maxCount
+				}
+			} else {
+				photos.FindPhotoByAlbum(userFolderName, v.Name, v.ID, baseDir, v.Count, 0)
+			}
+
+		}
+	} else {
+		log.Fatalln("You need to input -s=videos_or_photos.")
+	}
 }

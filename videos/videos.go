@@ -13,6 +13,7 @@ import (
 	"time"
 
 	data "github.com/hoanglv00/goCrawlerFacebook/data"
+	utils "github.com/hoanglv00/goCrawlerFacebook/utils"
 	fb "github.com/huandu/facebook"
 )
 
@@ -134,18 +135,11 @@ func FileSize(filePath string) (int64, bool) {
 func DownloadVideoFromLink(baseDir string, linkChan chan data.VideoData, wg *sync.WaitGroup) {
 	defer wg.Done()
 
+	wgp := utils.NewWaitGroupPool(data.ThreadNumber)
 	for target := range linkChan {
 		downloadLink := "https://www.facebook.com" + target.VideoURL
 		html := Get(downloadLink, downloadLink)
-		//title := MatchOneOf(html, `<title id="pageTitle">(.+)</title>`)[1]
 
-		//var tag string
-		//var u_sd, u_hd string
-		// for _, quality := range []string{"sd"} {
-		// 	//tag := quality
-		// 	u = MatchOneOf(
-		// 		html, fmt.Sprintf(`%s_src_no_ratelimit:"(.+?)"`, quality))[1]
-		// }
 		u_sd := MatchOneOf(
 			html, fmt.Sprintf(`%s_src_no_ratelimit:"(.+?)"`, "sd"))[1]
 		u_hd := MatchOneOf(
@@ -170,27 +164,23 @@ func DownloadVideoFromLink(baseDir string, linkChan chan data.VideoData, wg *syn
 			file, _ = os.Create(tempFilePath)
 		}
 
-		// defer func() {
-		// 	file.Close()
-		// 	// must close the file before rename or it will cause `The process cannot access the file because it is being used by another process.` error.
-		// 	err := os.Rename(tempFilePath, filePath)
-		// 	if err != nil {
-		// 		log.Fatal(err)
-		// 	}
-		// }()
+		wgp.Add()
+		go func() {
+			defer wgp.Done()
+			res := Request("GET", downloadLink, nil, headers)
+			if res.StatusCode >= 400 {
+				log.Fatal(fmt.Sprintf("HTTP error: %d", res.StatusCode))
+			}
+			fmt.Println(res.Body)
 
-		res := Request("GET", downloadLink, nil, headers)
-		if res.StatusCode >= 400 {
-			log.Fatal(fmt.Sprintf("HTTP error: %d", res.StatusCode))
-		}
-		fmt.Println(res.Body)
+			defer res.Body.Close()
+			defer file.Close()
+			_, err := io.Copy(file, res.Body)
+			if err != nil {
+				log.Println("download video err=", err)
+			}
+		}()
 
-		defer res.Body.Close()
-		defer file.Close()
-		_, err := io.Copy(file, res.Body)
-		if err != nil {
-			log.Println("download video err=", err)
-		}
 	}
 }
 

@@ -1,5 +1,7 @@
 package data
 
+var ThreadNumber int
+
 type DLData struct {
 	ImageURL    string
 	ImageID     string
