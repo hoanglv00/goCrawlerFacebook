@@ -52,7 +52,7 @@ func main() {
 
 	//Get system user folder
 	usr, _ := user.Current()
-	baseDir := fmt.Sprintf("%v/Pictures/goFBPages", usr.HomeDir)
+	baseDir := fmt.Sprintf("%v/Pictures/FBPages", usr.HomeDir)
 
 	//baseDir := "D:/goFBPages"
 
