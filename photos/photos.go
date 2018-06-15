@@ -22,6 +22,7 @@ func init() {
 	TOKEN = os.Getenv("FBTOKEN")
 }
 
+//Use to change json result to struct
 func ParseMapToStruct(inData interface{}, decodeStruct interface{}) {
 	jret, _ := json.Marshal(inData)
 	err := json.Unmarshal(jret, &decodeStruct)
@@ -30,6 +31,7 @@ func ParseMapToStruct(inData interface{}, decodeStruct interface{}) {
 	}
 }
 
+//Use to download photos
 func DownloadWorker(destDir string, linkChan chan data.DLData, wg *sync.WaitGroup) {
 	defer wg.Done()
 
@@ -71,6 +73,7 @@ func DownloadWorker(destDir string, linkChan chan data.DLData, wg *sync.WaitGrou
 		}
 	}
 }
+
 func FindPhotoByAlbum(ownerName string, albumName string, albumId string, baseDir string, photoCount int, photoOffset int) {
 	photoRet := data.FBPhotos{}
 	var queryString string
@@ -85,12 +88,14 @@ func FindPhotoByAlbum(ownerName string, albumName string, albumId string, baseDi
 	ParseMapToStruct(resPhoto, &photoRet)
 	dir := fmt.Sprintf("%v/%v/%v - %v", baseDir, ownerName, albumId, albumName)
 	os.MkdirAll(dir, 0755)
+
 	linkChan := make(chan data.DLData)
 	wg := new(sync.WaitGroup)
 	for i := 0; i < 1; i++ {
 		wg.Add(1)
 		go DownloadWorker(dir, linkChan, wg)
 	}
+	//Send data to DownloadWorker
 	for _, v := range photoRet.Data {
 		dlChan := data.DLData{}
 		dlChan.ImageID = v.ID
@@ -100,6 +105,7 @@ func FindPhotoByAlbum(ownerName string, albumName string, albumId string, baseDi
 	}
 }
 
+//Get from, count and name albums by facebook api
 func RunFBGraphAPIAlbums(query string) (queryResult interface{}) {
 	res, err := fb.Get(query, fb.Params{
 		"access_token": TOKEN,
@@ -111,6 +117,8 @@ func RunFBGraphAPIAlbums(query string) (queryResult interface{}) {
 	}
 	return res
 }
+
+//Get link, images photos by facebook api
 func RunFBGraphAPIPhotos(query string) (queryResult interface{}) {
 	res, err := fb.Get(query, fb.Params{
 		"access_token": TOKEN,

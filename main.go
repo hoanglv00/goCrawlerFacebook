@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	//"os/user"
+	"os/user"
 	"sync"
 
 	data "github.com/hoanglv00/goCrawlerFacebook/data"
@@ -17,7 +17,7 @@ import (
 )
 
 var pageName = flag.String("n", "", "Facebook page name such as: scottiepippen")
-var crawler = flag.String("s", "", "Crawler videos or pictures")
+var crawler = flag.String("s", "", "Crawler videos or photos")
 var numOfWorkersPtr = flag.Int("c", 2, "The number of concurrent rename workers. default = 2")
 var m sync.Mutex
 var TOKEN string
@@ -30,7 +30,6 @@ func runFBGraphAPI(query string) (queryResult interface{}) {
 	res, err := fb.Get(query, fb.Params{
 		"access_token": TOKEN,
 	})
-
 	if err != nil {
 		log.Fatalln("FB connect error, err=", err.Error())
 	}
@@ -52,10 +51,10 @@ func main() {
 	data.ThreadNumber = *numOfWorkersPtr
 
 	//Get system user folder
-	// usr, _ := user.Current()
-	// baseDir := fmt.Sprintf("%v/Pictures/goFBPages", usr.HomeDir)
+	usr, _ := user.Current()
+	baseDir := fmt.Sprintf("%v/Pictures/goFBPages", usr.HomeDir)
 
-	baseDir := "D:/goFBPages"
+	//baseDir := "D:/goFBPages"
 
 	//Get User info
 	resUser := runFBGraphAPI("/" + inputPage)
@@ -74,6 +73,7 @@ func main() {
 		if err != nil {
 			log.Fatalln("write file error, err=", err)
 		}
+
 	} else if *crawler == "videos" {
 		//Get all videos
 		resVideos := videos.RunFBGraphAPIVideos("/" + inputPage + "/videos?limit=100")

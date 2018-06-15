@@ -39,6 +39,7 @@ func FindAllVideos(videosRet data.FBVideos, baseDir string, ownerName string, id
 		wg.Add(1)
 		go DownloadVideoFromLink(dir, linkChan, wg)
 	}
+	//Send data to DownloadVideoFromLink
 	for _, v := range videosRet.Data {
 		dlChan := data.VideoData{}
 		dlChan.VideoID = v.ID
@@ -64,15 +65,13 @@ func Get(url, refer string) string {
 	return string(body)
 }
 
+//Use to find link download video in string
 func MatchOneOf(text string, patterns ...string) []string {
 	var (
 		re    *regexp.Regexp
 		value []string
 	)
 	for _, pattern := range patterns {
-		// (?flags): set flags within current group; non-capturing
-		// s: let . match \n (default false)
-		// https://github.com/google/re2/wiki/Syntax
 		re = regexp.MustCompile(pattern)
 		value = re.FindStringSubmatch(text)
 		if len(value) > 0 {
@@ -82,6 +81,7 @@ func MatchOneOf(text string, patterns ...string) []string {
 	return nil
 }
 
+//Set request
 func Request(
 	method, url string, body io.Reader, headers map[string]string,
 ) *http.Response {
@@ -92,6 +92,7 @@ func Request(
 	client := &http.Client{
 		Transport: transport,
 	}
+
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		log.Print(url)
@@ -103,13 +104,13 @@ func Request(
 	req.Header.Set("Referer", url)
 	for k, v := range headers {
 		req.Header.Set(k, v)
-		//fmt.Println(req)
 	}
 	retryTimes := 3
 	var (
 		res          *http.Response
 		requestError error
 	)
+
 	for i := 0; i < retryTimes; i++ {
 		res, requestError = client.Do(req)
 		if requestError == nil {
@@ -138,8 +139,8 @@ func DownloadVideoFromLink(baseDir string, linkChan chan data.VideoData, wg *syn
 	wgp := utils.NewWaitGroupPool(data.ThreadNumber)
 	for target := range linkChan {
 		downloadLink := "https://www.facebook.com" + target.VideoURL
+		//find link download video
 		html := Get(downloadLink, downloadLink)
-
 		u_sd := MatchOneOf(
 			html, fmt.Sprintf(`%s_src_no_ratelimit:"(.+?)"`, "sd"))[1]
 		u_hd := MatchOneOf(
@@ -149,8 +150,9 @@ func DownloadVideoFromLink(baseDir string, linkChan chan data.VideoData, wg *syn
 		} else {
 			downloadLink = u_sd
 		}
+
 		var filePath = fmt.Sprintf("%v/%v.mp4", baseDir, target.VideoID)
-		tempFilePath := filePath + ".download"
+		tempFilePath := filePath
 		tempFileSize, _ := FileSize(tempFilePath)
 		headers := map[string]string{
 			"Referer": downloadLink,
@@ -165,14 +167,14 @@ func DownloadVideoFromLink(baseDir string, linkChan chan data.VideoData, wg *syn
 		}
 
 		wgp.Add()
+		//download videos
 		go func() {
 			defer wgp.Done()
 			res := Request("GET", downloadLink, nil, headers)
 			if res.StatusCode >= 400 {
 				log.Fatal(fmt.Sprintf("HTTP error: %d", res.StatusCode))
 			}
-			fmt.Println(res.Body)
-
+			//fmt.Println(res.Body)
 			defer res.Body.Close()
 			defer file.Close()
 			_, err := io.Copy(file, res.Body)
@@ -184,12 +186,12 @@ func DownloadVideoFromLink(baseDir string, linkChan chan data.VideoData, wg *syn
 	wgp.Wait()
 }
 
+//Get permalink_url, updated_time, description, id videos by facebook api
 func RunFBGraphAPIVideos(query string) (queryResult interface{}) {
 	res, err := fb.Get(query, fb.Params{
 		"access_token": TOKEN,
 		"fields":       "permalink_url,updated_time,description,id",
 	})
-
 	if err != nil {
 		log.Fatalln("FB connect error, err=", err.Error())
 	}
